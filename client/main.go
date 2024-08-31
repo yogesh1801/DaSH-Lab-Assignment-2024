@@ -13,7 +13,7 @@ func main() {
 	c := NewClient(url)
 	go c.readMessages()
 
-	file, err := os.Open("../input.txt")
+	file, err := os.Open("./input.txt")
 	if err != nil {
 		log.Fatal("Error opening input file:", err)
 	}
