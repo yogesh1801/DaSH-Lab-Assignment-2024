@@ -15,16 +15,13 @@ Table* createDummyTable(const std::string& name, int rows, int cols) {
     return table;
 }
 
-// Function to check if a transaction can be scheduled
 bool canScheduleTransaction(const Transaction& transaction, 
                             const std::unordered_map<std::string, std::list<Transaction*>>& lockMap) {
     if (transaction.tablelock) {
-        // For table lock, check if any locks exist for this table
         return lockMap.find(transaction.table->getName()) == lockMap.end() || 
                lockMap.at(transaction.table->getName()).empty();
     }
 
-    // For other locks, check each lock hash
     for (const auto& hash : transaction.lockhashes) {
         if (lockMap.find(hash) != lockMap.end() && !lockMap.at(hash).empty()) {
             return false;
@@ -50,19 +47,19 @@ int main() {
     db.addTable(createDummyTable("Table1", 5, 5));
     db.addTable(createDummyTable("Table2", 4, 4));
     db.addTable(createDummyTable("Table3", 3, 3));
+    db.addTable(createDummyTable("Table4", 3, 3));
 
-    // Create dummy transactions
+    // dummy transactions
     std::vector<Transaction> transactions;
     transactions.push_back(Transaction("T1", db.getTable("Table1"), true, "ACTIVE")); // Table lock
     transactions.push_back(Transaction("T2", db.getTable("Table1"), {Lock("ROW", "Table1", 0)}, "ACTIVE")); // Row lock
     transactions.push_back(Transaction("T3", db.getTable("Table1"), {Lock("COLUMN", "Table1", -1, 2)}, "ACTIVE")); // Column lock
     transactions.push_back(Transaction("T4", db.getTable("Table2"), {Lock("CELL", "Table2", 1, 1)}, "ACTIVE")); // Cell lock
-    transactions.push_back(Transaction("T1", db.getTable("Table3"), true, "ACTIVE")); // Another table lock
+    transactions.push_back(Transaction("T5", db.getTable("Table3"), true, "ACTIVE")); // Another table lock
 
-    // Create lock map
+
     std::unordered_map<std::string, std::list<Transaction*>> lockMap;
 
-    // Try to schedule transactions
     for (auto& transaction : transactions) {
         if (canScheduleTransaction(transaction, lockMap)) {
             scheduleTransaction(&transaction, lockMap);
